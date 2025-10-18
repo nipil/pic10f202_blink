@@ -2,7 +2,10 @@
     #include "p10f202.inc"
 
 ; CONFIG
-    __CONFIG _WDT_OFF & _CP_OFF & _MCLRE_OFF
+    CONFIG  WDTE = OFF           ; Watchdog Timer (WDT disabled)
+    CONFIG  CP = OFF             ; Code Protect (Code protection off)
+    CONFIG  MCLRE = OFF	       ; Master Clear Enable (GP3/MCLR pin function  is MCLR)
+
     org 0x0000
 
 INIT:
