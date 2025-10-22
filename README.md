@@ -50,6 +50,23 @@ Install the required tools for the job
 
     ./setup.sh
 
+In case your K150 needs it, plug another PIC16F628A with pin 1 in ZIF pin 2, and get and programm the latest firmware :
+
+    curl -qq -Ss -L -o k150-v25a-P018.hex https://github.com/Salamek/picpro/blob/c671a925db8cd28f10750985b08eae99468e7fa7/firmwares/Firmware%20v25a%20(Protocol%20P018)/k150.hex
+    picpro program -p /dev/ttyUSB0 -i k150-v25a-P018.hex -t 16F628A
+
+    Waiting for user to insert chip into socket with pin 1 at socket pin 2
+    Chip detected.
+    Chip config: {'chip_id': 4198, 'id': b'\x0f\x0f\x0f\x0f\xff\xff\xff\xff', 'fuses': [7978, 16383, 16383, 65535, 65535, 65535, 65535], 'calibrate': 65535}
+    Erasing chip.
+    Programming ROM.
+    Programming EEPROM.
+    Programming ID and fuses.
+    Verifying ROM.
+    ROM verified.
+    Verifying EEPROM.
+    EEPROM verified.
+
 Edit your assembly files, and then compile it for the selected target microcontroller
 
     make build
