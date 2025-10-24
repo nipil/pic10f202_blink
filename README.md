@@ -1,5 +1,6 @@
 # PIC10F202 blink using Debian and K150 programmer
 
+## Device for K150 programmer
 
 Plug your K150 in the Debian VM or desktop or server
 
@@ -38,6 +39,8 @@ Ensure that your user is part of that owning group
 
 IMPORTANT: Logout and reconnect from your desktop or ssh session or the added group will not be applied and you will not be able to use the programming device
 
+## Enabling K150 device into a throwaway container
+
 Start a throwaway development container to not pollute your host :
 
     podman run --rm --group-add keep-groups -v .:/pic -v /dev/ttyUSB0:/dev/ttyUSB0 --pull always -it debian:trixie-slim
@@ -49,6 +52,43 @@ Go to the source folder
 Install the required tools for the job
 
     ./setup.sh
+
+Edit your assembly files, and then compile it for the selected target microcontroller
+
+    make build
+
+## Optional: starting a Windows XM VM with Qemu and sharing the K150 with it
+
+Install required packages
+
+    sudo apt install qemu-system-amd64 qemu-utils qemu-system-gui --no-install-recommends -y
+
+    sudo usermod -a -G kvm $USER
+
+IMPORTANT: Logout and reconnect from your desktop or ssh session or the added group will not be applied and you will not be able to use the programming device
+
+Then get the images :
+
+    curl -LO https://archive.org/download/fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982_202012/fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982.iso
+    curl -LO https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
+
+Create the disk image
+
+    qemu-img create -f qcow2 winxp.qcow 5G
+
+Launch once to start the install
+
+    qemu-system-x86_64 -hda winxp.qcow -cdrom  fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982.iso -boot d -m 1024 -enable-kvm -vnc :0
+
+    # launch vnc client and connect to VM IP using port 5900 (for display `:0`) and proceed
+
+Launch a second time to finish the install
+
+    qemu-system-x86_64 -hda winxp.qcow -cdrom  fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982.iso -boot d -m 1024 -enable-kvm -vnc :0
+
+
+
+## Optional : upgrading the K150 firmware
 
 In case your K150 needs it, plug another PIC16F628A with pin 1 in ZIF pin 2, and get and programm the latest firmware :
 
@@ -67,6 +107,4 @@ In case your K150 needs it, plug another PIC16F628A with pin 1 in ZIF pin 2, and
     Verifying EEPROM.
     EEPROM verified.
 
-Edit your assembly files, and then compile it for the selected target microcontroller
-
-    make build
+Then swap the two chips.
