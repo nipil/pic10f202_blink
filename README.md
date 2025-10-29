@@ -49,44 +49,156 @@ Go to the source folder
 
     cd /pic
 
+If you want to install the latest development version, otherwise skip this command
+
+    export PIP_PICPRO='git+https://github.com/Salamek/picpro.git@master'
+
 Install the required tools for the job
 
     ./setup.sh
+
+Get offline information about your chip
+
+    make chipinfo
+
+    {"chip_name": "10f202", "include": true, "socket_image": "0pin", "erase_mode": 6, "flash_chip": true, "power_sequence": "VccVpp1", "program_delay": 20, "program_tries": 1, "over_program": 0, "core_type": "newf12b", "rom_size": 512, "eeprom_size": 0, "fuse_blank": [4095], "cp_warn": false, "cal_word": true, "band_gap": false, "icsp_only": true, "chip_id": 65535, "fuses": {"WDT": {"Enabled": [[0, 16383]], "Disabled": [[0, 16379]]}, "Code Protect": {"Disabled": [[0, 16383]], "Enabled": [[0, 16375]]}, "MCLRE": {"Enabled": [[0, 16383]], "Disabled": [[0, 16367]]}}}
+
+Offline decode of fuses
+
+    make decode_default_fuses
+    picpro decode_fuses 4095 -t 10f202
+    {'WDT': 'Enabled', 'Code Protect': 'Disabled', 'MCLRE': 'Enabled'}
+
+Verify the communication with your programmer
+
+    make proginfo
+    picpro programmer_info -p /dev/ttyUSB0
+    Firmware version: 3
+    Protocol version: P018
+
+Read chip config (here the PIC10F202 requires ICSP, according to microbrn.exe)
+
+    make read_config
+    picpro read_chip_config -p /dev/ttyUSB0 -t 10f202 --icsp
+    Opening connection to programmer...
+    Initializing programming interface...
+    Chip ID: 65535 (0xffff)
+    ID:      ffffffffffffffff
+    CAL:     65535
+    Fuses:
+        WDT = Disabled
+        Code Protect = Disabled
+        MCLRE = Disabled
+    Done!
+
+Dump the current content of your chip
+
+    make dump
+    picpro dump rom -p /dev/ttyUSB0 -t 10f202 -o dump-rom.hex
+    Opening connection to programmer...
+    Initializing programming interface...
+    Reading ROM into file dump-rom.hex...
+    Done!
+    picpro dump eeprom -p /dev/ttyUSB0 -t 10f202 -o dump-eeprom.hex
+    Opening connection to programmer...
+    Initializing programming interface...
+    This chip has no EEPROM!
+    picpro dump config -p /dev/ttyUSB0 -t 10f202 -o dump-config.hex
+    Opening connection to programmer...
+    Initializing programming interface...
+    Reading CONFIG into file dump-config.hex...
+    Done!
+
+Erase your chip
+
+    make erase
+    picpro erase -p /dev/ttyUSB0 -t 10f202 --icsp
+    Opening connection to programmer...
+    Initializing programming interface...
+    Erasing chip...
+    Done!
 
 Edit your assembly files, and then compile it for the selected target microcontroller
 
     make build
 
-## Optional: starting a Windows XM VM with Qemu and sharing the K150 with it
+Get information about your hex file (**FAILS at the moment**)
 
-Install required packages
+    make hexinfo
+    picpro hex_info 10f202.hex 10f202
+    Traceback (most recent call last):
+    File "/root/venv/bin/picpro", line 8, in <module>
+        sys.exit(main())
+                ~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 532, in main
+        getattr(command, 'chosen')()  # Execute the function specified by the user.
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 384, in hex_info
+        flash_data = FlashData(chip_info_entry, intel_hex)
+    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 52, in __init__
+        self._rom_blank_word = self._calculate_rom_blank_word()
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 99, in _calculate_rom_blank_word
+        blank_word = 0xffff << self.chip_info.core_bits
+                            ^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/functools.py", line 1026, in __get__
+        val = self.func(instance)
+    File "/root/venv/lib/python3.13/site-packages/picpro/ChipInfoEntry.py", line 135, in core_bits
+        raise ValueError('Failed to detect core bits.')
+    ValueError: Failed to detect core bits.
+    make: *** [Makefile:42: hexinfo] Error 1
 
-    sudo apt install qemu-system-amd64 qemu-utils qemu-system-gui --no-install-recommends -y
+Program your chip (**FAILS at the moment**)
 
-    sudo usermod -a -G kvm $USER
+    make prog
+    picpro program -p /dev/ttyUSB0 -i 10f202.hex -t 10f202 --icsp
+    Traceback (most recent call last):
+    File "/root/venv/bin/picpro", line 8, in <module>
+        sys.exit(main())
+                ~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 532, in main
+        getattr(command, 'chosen')()  # Execute the function specified by the user.
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 201, in program
+        flash_data = FlashData(chip_info_entry, intel_hex, fuses=fuses, pic_id=OPTIONS['--id'])
+    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 52, in __init__
+        self._rom_blank_word = self._calculate_rom_blank_word()
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 99, in _calculate_rom_blank_word
+        blank_word = 0xffff << self.chip_info.core_bits
+                            ^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/functools.py", line 1026, in __get__
+        val = self.func(instance)
+    File "/root/venv/lib/python3.13/site-packages/picpro/ChipInfoEntry.py", line 135, in core_bits
+        raise ValueError('Failed to detect core bits.')
+    ValueError: Failed to detect core bits.
+    make: *** [Makefile:35: prog] Error 1
 
-IMPORTANT: Logout and reconnect from your desktop or ssh session or the added group will not be applied and you will not be able to use the programming device
+Verify your programming (**FAILS at the moment**)
 
-Then get the images :
-
-    curl -LO https://archive.org/download/fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982_202012/fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982.iso
-    curl -LO https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso
-
-Create the disk image
-
-    qemu-img create -f qcow2 winxp.qcow 5G
-
-Launch once to start the install
-
-    qemu-system-x86_64 -hda winxp.qcow -cdrom  fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982.iso -boot d -m 1024 -enable-kvm -vnc :0
-
-    # launch vnc client and connect to VM IP using port 5900 (for display `:0`) and proceed
-
-Launch a second time to finish the install
-
-    qemu-system-x86_64 -hda winxp.qcow -cdrom  fr_windows_xp_professional_with_service_pack_3_x86_cd_vl_x14-73982.iso -boot d -m 1024 -enable-kvm -vnc :0
-
-
+    make verify
+    picpro verify -p /dev/ttyUSB0 -i 10f202.hex -t 10f202 --icsp
+    Traceback (most recent call last):
+    File "/root/venv/bin/picpro", line 8, in <module>
+        sys.exit(main())
+                ~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 532, in main
+        getattr(command, 'chosen')()  # Execute the function specified by the user.
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 258, in verify
+        flash_data = FlashData(chip_info_entry, intel_hex)
+    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 52, in __init__
+        self._rom_blank_word = self._calculate_rom_blank_word()
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 99, in _calculate_rom_blank_word
+        blank_word = 0xffff << self.chip_info.core_bits
+                            ^^^^^^^^^^^^^^^^^^^^^^^^
+    File "/usr/lib/python3.13/functools.py", line 1026, in __get__
+        val = self.func(instance)
+    File "/root/venv/lib/python3.13/site-packages/picpro/ChipInfoEntry.py", line 135, in core_bits
+        raise ValueError('Failed to detect core bits.')
+    ValueError: Failed to detect core bits.
+    make: *** [Makefile:46: verify] Error 1
 
 ## Optional : upgrading the K150 firmware
 
