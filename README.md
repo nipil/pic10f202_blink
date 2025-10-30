@@ -122,83 +122,63 @@ Edit your assembly files, and then compile it for the selected target microcontr
 
     make build
 
-Get information about your hex file (**FAILS at the moment**)
+Get information about your hex file
 
     make hexinfo
     picpro hex_info 10f202.hex 10f202
-    Traceback (most recent call last):
-    File "/root/venv/bin/picpro", line 8, in <module>
-        sys.exit(main())
-                ~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 532, in main
-        getattr(command, 'chosen')()  # Execute the function specified by the user.
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 384, in hex_info
-        flash_data = FlashData(chip_info_entry, intel_hex)
-    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 52, in __init__
-        self._rom_blank_word = self._calculate_rom_blank_word()
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 99, in _calculate_rom_blank_word
-        blank_word = 0xffff << self.chip_info.core_bits
-                            ^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/lib/python3.13/functools.py", line 1026, in __get__
-        val = self.func(instance)
-    File "/root/venv/lib/python3.13/site-packages/picpro/ChipInfoEntry.py", line 135, in core_bits
-        raise ValueError('Failed to detect core bits.')
-    ValueError: Failed to detect core bits.
-    make: *** [Makefile:42: hexinfo] Error 1
+    ROM 22 words used, 490 words free on chip.
+    EEPROM 0 bytes used, 0 bytes free on chip.
+    data:
+    - { first: 0x00000000, last: 0x0000002B, length: 0x0000002C }
+    - { first: 0x00001FFE, last: 0x00001FFF, length: 0x00000002 }
 
 Program your chip (**FAILS at the moment**)
 
     make prog
     picpro program -p /dev/ttyUSB0 -i 10f202.hex -t 10f202 --icsp
+    Opening connection to programmer...
+    Initializing programming interface...
+    ==== Chip info ====
+    Chip ID: 65535 (0xffff)
+    ID:      ffffffffffffffff
+    CAL:     65535
+    Fuses:
+        WDT = Disabled
+        Code Protect = Disabled
+        MCLRE = Disabled
+    CAL is in ROM data, patching ROM to contain the same CAL data...
+    Erasing chip.
+    Done!
+    Programming ROM.
     Traceback (most recent call last):
-    File "/root/venv/bin/picpro", line 8, in <module>
+    File "/usr/local/bin/picpro", line 8, in <module>
         sys.exit(main())
                 ~~~~^^
     File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 532, in main
         getattr(command, 'chosen')()  # Execute the function specified by the user.
         ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 201, in program
-        flash_data = FlashData(chip_info_entry, intel_hex, fuses=fuses, pic_id=OPTIONS['--id'])
-    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 52, in __init__
-        self._rom_blank_word = self._calculate_rom_blank_word()
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 99, in _calculate_rom_blank_word
-        blank_word = 0xffff << self.chip_info.core_bits
-                            ^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/lib/python3.13/functools.py", line 1026, in __get__
-        val = self.func(instance)
-    File "/root/venv/lib/python3.13/site-packages/picpro/ChipInfoEntry.py", line 135, in core_bits
-        raise ValueError('Failed to detect core bits.')
-    ValueError: Failed to detect core bits.
-    make: *** [Makefile:35: prog] Error 1
+    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 228, in program
+        programming_interface.program_rom(flash_data.rom_data)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/protocol/p18a/ProgrammingInterface.py", line 120, in program_rom
+        self.connection.expect(b'P', timeout=20)
+        ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+    File "/root/venv/lib/python3.13/site-packages/picpro/protocol/IConnection.py", line 56, in expect
+        raise InvalidResponseError('Expected "{!r}", received {!r}.'.format(expected, response))
+    picpro.exceptions.InvalidResponseError: Expected "b'P'", received b'N'.
+    make: *** [Makefile:46: prog] Error 1
 
 Verify your programming (**FAILS at the moment**)
 
     make verify
     picpro verify -p /dev/ttyUSB0 -i 10f202.hex -t 10f202 --icsp
-    Traceback (most recent call last):
-    File "/root/venv/bin/picpro", line 8, in <module>
-        sys.exit(main())
-                ~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 532, in main
-        getattr(command, 'chosen')()  # Execute the function specified by the user.
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 258, in verify
-        flash_data = FlashData(chip_info_entry, intel_hex)
-    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 52, in __init__
-        self._rom_blank_word = self._calculate_rom_blank_word()
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
-    File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 99, in _calculate_rom_blank_word
-        blank_word = 0xffff << self.chip_info.core_bits
-                            ^^^^^^^^^^^^^^^^^^^^^^^^
-    File "/usr/lib/python3.13/functools.py", line 1026, in __get__
-        val = self.func(instance)
-    File "/root/venv/lib/python3.13/site-packages/picpro/ChipInfoEntry.py", line 135, in core_bits
-        raise ValueError('Failed to detect core bits.')
-    ValueError: Failed to detect core bits.
-    make: *** [Makefile:46: verify] Error 1
+    Opening connection to programmer...
+    Initializing programming interface...
+    Chip config: ChipConfig(chip_id=65535, id=b'\xff\xff\xff\xff\xff\xff\xff\xff', fuses=[4075, 65535, 65535, 65535, 65535, 65535, 65535], calibrate=65535)
+    CAL is in ROM data, patching ROM to contain the same CAL data...
+    Verifying ROM.
+    ROM verification failed.
+    Done!
 
 ## Optional : upgrading the K150 firmware
 

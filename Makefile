@@ -34,16 +34,20 @@ dump:
 erase:
 	picpro erase -p $(device) -t $(chip) --icsp
 
-# BUG:
-#   File "/root/venv/lib/python3.13/site-packages/picpro/FlashData.py", line 99, in _calculate_rom_blank_word
-# blank_word = 0xffff << self.chip_info.core_bits
-#    raise ValueError('Failed to detect core bits.')
-
 hexinfo:
 	picpro hex_info $(chip).hex $(chip)
 
-prog:
-	picpro program -p $(device) -i $(chip).hex -t $(chip) --icsp
-
 verify:
 	picpro verify -p $(device) -i $(chip).hex -t $(chip) --icsp
+
+# BUG:
+#   File "/root/venv/lib/python3.13/site-packages/picpro/bin/picpro.py", line 228, in program
+#     programming_interface.program_rom(flash_data.rom_data)
+#   File "/root/venv/lib/python3.13/site-packages/picpro/protocol/p18a/ProgrammingInterface.py", line 120, in program_rom
+#     self.connection.expect(b'P', timeout=20)
+#   File "/root/venv/lib/python3.13/site-packages/picpro/protocol/IConnection.py", line 56, in expect
+#     raise InvalidResponseError('Expected "{!r}", received {!r}.'.format(expected, response))
+# picpro.exceptions.InvalidResponseError: Expected "b'P'", received b'N'.
+
+prog:
+	picpro program -p $(device) -i $(chip).hex -t $(chip) --icsp
